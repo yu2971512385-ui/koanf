@@ -415,9 +415,7 @@ func (ko *Koanf) MapKeys(path string) []string {
 
 	mp, ok := o.(map[string]any)
 	if !ok {
-		if mp = toStringKeyedMap(o); mp == nil {
-			return out
-		}
+		return out
 	}
 	out = make([]string, 0, len(mp))
 	for k := range mp {
@@ -661,45 +659,4 @@ func (ko *Koanf) appendMap(mp map[string]any, out []*Koanf) []*Koanf {
 	k := New(ko.conf.Delim)
 	_ = k.merge(mp, new(options))
 	return append(out, k)
-}
-
-// toStringKeyedMap converts a map that has string keys but is not a
-// map[string]any into one, so that the typed map getters also work on the
-// values a Go-native provider or an unmarshalled struct holds. It returns nil
-// for anything that is not a map with string keys.
-func toStringKeyedMap(v any) map[string]any {
-	rv := reflect.ValueOf(v)
-	if rv.Kind() != reflect.Map || rv.Type().Key().Kind() != reflect.String {
-		return nil
-	}
-
-	out := make(map[string]any, rv.Len())
-	for iter := rv.MapRange(); iter.Next(); {
-		out[iter.Key().String()] = iter.Value().Interface()
-	}
-
-	return out
-}
-
-// toAnySlice converts a slice or an array that is not []any into one, so that
-// the typed slice getters also work on the values a Go-native provider or an
-// unmarshalled struct holds. []byte is left alone, as its elements are bytes
-// rather than values a user would read back one by one. It returns nil for
-// anything that is not a slice or an array.
-func toAnySlice(v any) []any {
-	if _, ok := v.([]byte); ok {
-		return nil
-	}
-
-	rv := reflect.ValueOf(v)
-	if k := rv.Kind(); k != reflect.Slice && k != reflect.Array {
-		return nil
-	}
-
-	out := make([]any, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		out[i] = rv.Index(i).Interface()
-	}
-
-	return out
 }
