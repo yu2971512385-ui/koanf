@@ -1649,6 +1649,56 @@ func TestBoolsNativeSlice(t *testing.T) {
 	assert.Equal([]bool{true, false, true}, k.Bools("bools"))
 }
 
+func TestTypedGettersNativeSlices(t *testing.T) {
+	assert := assert.New(t)
+
+	// A slice whose element type is not the one the getter returns, as a
+	// Go-native provider or an unmarshalled struct holds it. The same values
+	// inside a []any convert fine, so dropping them here is a silent loss.
+	k := koanf.New(delim)
+	require.NoError(t, k.Load(confmap.Provider(map[string]any{
+		"ints":   []int{1, 2},
+		"int64s": []int64{1, 2},
+		"floats": []float64{1.5, 2.5},
+		"strs":   []string{"1", "2"},
+		"bools":  []string{"true", "false"},
+		"bytes":  []byte("ab"),
+	}, "."), nil))
+
+	assert.Equal([]string{"1", "2"}, k.Strings("ints"))
+	assert.Equal([]string{"1.5", "2.5"}, k.Strings("floats"))
+	assert.Equal([]int{1, 2}, k.Ints("strs"))
+	assert.Equal([]int64{1, 2}, k.Int64s("strs"))
+	assert.Equal([]float64{1, 2}, k.Float64s("ints"))
+	assert.Equal([]float64{1, 2}, k.Float64s("int64s"))
+	assert.Equal([]bool{true, false}, k.Bools("bools"))
+
+	// A []byte is a slice of bytes rather than of values to read one by one.
+	assert.Equal([]string{}, k.Strings("bytes"))
+}
+
+func TestTypedGettersNativeMaps(t *testing.T) {
+	assert := assert.New(t)
+
+	k := koanf.New(delim)
+	require.NoError(t, k.Load(confmap.Provider(map[string]any{
+		"intmap":   map[string]int{"a": 1, "b": 2},
+		"int64map": map[string]int64{"a": 1},
+		"boolmap":  map[string]bool{"a": true},
+		"floatmap": map[string]float64{"a": 1.5},
+		"strmap":   map[string]string{"a": "1"},
+	}, "."), nil))
+
+	assert.Equal(map[string]int{"a": 1, "b": 2}, k.IntMap("intmap"))
+	assert.Equal(map[string]int64{"a": 1}, k.Int64Map("int64map"))
+	assert.Equal(map[string]bool{"a": true}, k.BoolMap("boolmap"))
+	assert.Equal(map[string]float64{"a": 1.5}, k.Float64Map("floatmap"))
+	assert.Equal(map[string]int{"a": 1}, k.IntMap("strmap"))
+
+	assert.Equal([]string{"a", "b"}, k.MapKeys("intmap"))
+	assert.Equal([]string{"a"}, k.MapKeys("strmap"))
+}
+
 // waitTimeout waits for the waitgroup for the specified max timeout.
 // Returns true if waiting timed out.
 func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {

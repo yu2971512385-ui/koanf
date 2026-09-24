@@ -35,6 +35,17 @@ func (ko *Koanf) Int64s(path string) []int64 {
 	}
 
 	var out []int64
+	// A slice that is not []any, as a Go-native provider or an
+	// unmarshalled struct holds, goes through the same element
+	// conversion as []any does.
+	switch o.(type) {
+	case []int64, []any:
+	default:
+		if s := toAnySlice(o); s != nil {
+			o = s
+		}
+	}
+
 	switch v := o.(type) {
 	case []int64:
 		return v
@@ -93,7 +104,9 @@ func (ko *Koanf) Int64Map(path string) map[string]int64 {
 
 	mp, ok := o.(map[string]any)
 	if !ok {
-		return out
+		if mp = toStringKeyedMap(o); mp == nil {
+			return out
+		}
 	}
 
 	out = make(map[string]int64, len(mp))
@@ -149,6 +162,17 @@ func (ko *Koanf) Ints(path string) []int {
 	}
 
 	var out []int
+	// A slice that is not []any, as a Go-native provider or an
+	// unmarshalled struct holds, goes through the same element
+	// conversion as []any does.
+	switch o.(type) {
+	case []int, []any:
+	default:
+		if s := toAnySlice(o); s != nil {
+			o = s
+		}
+	}
+
 	switch v := o.(type) {
 	case []int:
 		return v
@@ -240,6 +264,17 @@ func (ko *Koanf) Float64s(path string) []float64 {
 	}
 
 	var out []float64
+	// A slice that is not []any, as a Go-native provider or an
+	// unmarshalled struct holds, goes through the same element
+	// conversion as []any does.
+	switch o.(type) {
+	case []float64, []any:
+	default:
+		if s := toAnySlice(o); s != nil {
+			o = s
+		}
+	}
+
 	switch v := o.(type) {
 	case []float64:
 		return v
@@ -285,7 +320,9 @@ func (ko *Koanf) Float64Map(path string) map[string]float64 {
 
 	mp, ok := o.(map[string]any)
 	if !ok {
-		return out
+		if mp = toStringKeyedMap(o); mp == nil {
+			return out
+		}
 	}
 
 	out = make(map[string]float64, len(mp))
@@ -401,6 +438,17 @@ func (ko *Koanf) Strings(path string) []string {
 	}
 
 	var out []string
+	// A slice that is not []any, as a Go-native provider or an
+	// unmarshalled struct holds, goes through the same element
+	// conversion as []any does.
+	switch o.(type) {
+	case []string, []any:
+	default:
+		if s := toAnySlice(o); s != nil {
+			o = s
+		}
+	}
+
 	switch v := o.(type) {
 	case []any:
 		out = make([]string, 0, len(v))
@@ -579,6 +627,17 @@ func (ko *Koanf) Bools(path string) []bool {
 	}
 
 	var out []bool
+	// A slice that is not []any, as a Go-native provider or an
+	// unmarshalled struct holds, goes through the same element
+	// conversion as []any does.
+	switch o.(type) {
+	case []bool, []any:
+	default:
+		if s := toAnySlice(o); s != nil {
+			o = s
+		}
+	}
+
 	switch v := o.(type) {
 	case []any:
 		out = make([]bool, 0, len(v))
@@ -620,7 +679,9 @@ func (ko *Koanf) BoolMap(path string) map[string]bool {
 
 	mp, ok := o.(map[string]any)
 	if !ok {
-		return out
+		if mp = toStringKeyedMap(o); mp == nil {
+			return out
+		}
 	}
 	out = make(map[string]bool, len(mp))
 	for k, v := range mp {
